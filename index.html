@@ -1,0 +1,2409 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Unit Circle Trainer</title>
+
+  <style>
+  *{
+  box-sizing:border-box;
+  font-family:"Segoe UI",system-ui,sans-serif;
+}
+
+body{
+  margin:0;
+  min-height:100vh;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  background:radial-gradient(circle at top,#0f2a35,#081a22 60%);
+  color:#fff;
+}
+
+.app{
+  width:380px;
+  background:linear-gradient(180deg,#0f2a35,#081a22);
+  border-radius:20px;
+  padding:18px;
+  box-shadow:0 25px 70px rgba(0,0,0,.6);
+}
+
+/* TITLE */
+
+.title{
+  text-align:center;
+  font-size:16px;
+  letter-spacing:.2em;
+  font-weight:900;
+  text-transform:uppercase;
+  margin-bottom:4px;
+}
+
+
+/* SUBTITLE (STEP LABEL) */
+
+.subtitle{
+  margin-top:4px;
+  font-size:11px;
+  font-weight:700;
+  letter-spacing:.12em;
+  opacity:.75;
+}
+
+
+/* MODE */
+
+.mode-row{
+  display:flex;
+  gap:8px;
+  margin-bottom:10px;
+}
+
+.mode-btn{
+  flex:1;
+  border:none;
+  border-radius:999px;
+  padding:7px;
+  background:rgba(255,255,255,.12);
+  color:#fff;
+  font-weight:800;
+  cursor:pointer;
+}
+
+.mode-btn.active{
+  background:#1fbad6;
+  color:#00333a;
+}
+
+/* PROBLEM */
+
+.problem{
+  text-align:center;
+  font-size:32px;
+  font-weight:900;
+  margin:12px 0 14px;
+}
+
+/* STEP */
+
+.step{
+  border:1px solid rgba(255,255,255,.15);
+  border-radius:12px;
+  padding:10px;
+  margin-bottom:12px;
+}
+
+.step-title{
+  font-size:13px;
+  font-weight:700;
+  margin-bottom:6px;
+}
+
+/* CONVERT */
+
+.ghost{
+  width:100%;
+  padding:8px;
+  border:none;
+  border-radius:10px;
+  background:rgba(255,255,255,.1);
+  color:#fff;
+  font-weight:700;
+  cursor:pointer;
+  margin-bottom:6px;
+}
+
+.convert-box{
+  background:rgba(0,0,0,.3);
+  border-radius:10px;
+  padding:10px;
+}
+
+.convert-row{
+  display:flex;
+  gap:6px;
+  align-items:center;
+}
+
+input{
+  flex:1;
+  padding:8px;
+  border:none;
+  border-radius:8px;
+  background:rgba(0,0,0,.35);
+  color:#fff;
+  font-weight:700;
+}
+
+/* PLANE */
+
+.plane-wrap{
+  margin:10px 0 12px;
+}
+
+.plane-head{
+  font-size:12px;
+  opacity:.7;
+  margin-bottom:6px;
+}
+
+.plane{
+  position:relative;
+  width:100%;
+  aspect-ratio:1/1;
+  background:rgba(255,255,255,.04);
+  border-radius:14px;
+  border:1px solid rgba(255,255,255,.15);
+  overflow:hidden;
+}
+
+/* ===============================
+   AXES (INTERACTIVE)
+   =============================== */
+
+.axis{
+  position:absolute;
+  background:#fff;
+  opacity:.6;
+  z-index:50;
+  cursor:pointer;
+  pointer-events:auto;
+  transition:all .2s ease;
+}
+
+/* X axis */
+.axis.x{
+  width:80%;
+  height:2px;
+  top:50%;
+  left:10%;
+}
+
+/* Y axis */
+.axis.y{
+  height:80%;
+  width:2px;
+  left:50%;
+  top:10%;
+}
+
+/* Invisible click padding */
+
+.axis.x::before,
+.axis.y::before{
+  content:"";
+  position:absolute;
+  background:transparent;
+}
+
+.axis.x::before{
+  top:-12px;
+  left:0;
+  width:100%;
+  height:26px;
+}
+
+.axis.y::before{
+  left:-12px;
+  top:0;
+  width:26px;
+  height:100%;
+}
+
+/* Hover */
+.axis:hover{
+  opacity:1;
+  background:#4dffb2;
+  box-shadow:0 0 8px rgba(77,255,178,.6);
+}
+
+/* Correct */
+.axis.correct{
+  background:#4dffb2;
+  opacity:1;
+  box-shadow:0 0 12px rgba(77,255,178,.9);
+}
+
+/* Wrong */
+.axis.wrong{
+  background:#ff6b6b;
+  opacity:1;
+  box-shadow:0 0 12px rgba(255,107,107,.9);
+}
+
+/* Tap feedback */
+.axis:active{
+  transform:scale(1.05);
+}
+
+/* ===============================
+   AXIS LABELS
+   =============================== */
+
+.axis-label{
+  position:absolute;
+  font-size:11px;
+  font-weight:900;
+  opacity:.75;
+  pointer-events:none;
+}
+
+.axis-label.top{
+  top:4px;
+  left:50%;
+  transform:translateX(-50%);
+}
+
+.axis-label.bottom{
+  bottom:4px;
+  left:50%;
+  transform:translateX(-50%);
+}
+
+.axis-label.left{
+  left:6px;
+  top:50%;
+  transform:translateY(-50%);
+}
+
+.axis-label.right{
+  right:6px;
+  top:50%;
+  transform:translateY(-50%);
+}
+
+/* ===============================
+   QUADRANT LABELS
+   =============================== */
+
+.q-label{
+  position:absolute;
+  font-size:12px;
+  opacity:.6;
+  font-weight:800;
+}
+
+.q1{ top:20px; right:18px; }
+.q2{ top:20px; left:18px; }
+.q3{ bottom:20px; left:18px; }
+.q4{ bottom:20px; right:18px; }
+
+/* ===============================
+   HITBOXES
+   =============================== */
+
+.hitbox{
+  position:absolute;
+  width:50%;
+  height:50%;
+  border:none;
+  background:transparent;
+  cursor:pointer;
+  z-index:10;
+}
+
+.hitbox.q1{ top:0; right:0; }
+.hitbox.q2{ top:0; left:0; }
+.hitbox.q3{ bottom:0; left:0; }
+.hitbox.q4{ bottom:0; right:0; }
+
+.hitbox:hover{
+  background:rgba(255,255,255,.05);
+}
+
+.hitbox.correct{
+  background:rgba(77,255,178,.25);
+}
+
+.hitbox.wrong{
+  background:rgba(255,107,107,.25);
+}
+
+/* ===============================
+   FEEDBACK
+   =============================== */
+
+.feedback{
+  text-align:center;
+  min-height:22px;
+  font-weight:800;
+}
+
+.feedback.good{ color:#4dffb2; }
+.feedback.bad{ color:#ff6b6b; }
+
+/* ===============================
+   CONTROLS
+   =============================== */
+
+.controls{
+  display:flex;
+  gap:8px;
+}
+
+.controls button{
+  flex:1;
+  padding:9px;
+  border:none;
+  border-radius:10px;
+  background:#0fa6b8;
+  color:#00333a;
+  font-weight:800;
+  cursor:pointer;
+}
+
+/* Split axes into halves */
+
+.axis.x.left-half{
+  width:40%;
+  height:2px;
+  top:50%;
+  left:10%;
+}
+
+.axis.x.right-half{
+  width:40%;
+  height:2px;
+  top:50%;
+  left:50%;
+}
+
+.axis.y.top-half{
+  height:40%;
+  width:2px;
+  left:50%;
+  top:10%;
+}
+
+.axis.y.bottom-half{
+  height:40%;
+  width:2px;
+  left:50%;
+  top:50%;
+}
+
+.frac-formula{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:10px;
+  font-weight:900;
+  margin-bottom:8px;
+}
+
+.frac{
+  display:inline-flex;
+  flex-direction:column;
+  align-items:center;
+  line-height:1.1;
+}
+
+.frac .top{
+  padding-bottom:2px;
+}
+
+.frac .bar{
+  width:100%;
+  height:1.5px;
+  background:#fff;
+  margin:2px 0;
+  opacity:.8;
+}
+
+.frac .bottom{
+  padding-top:2px;
+}
+
+/* ===============================
+   RANGE CONTROLS (ADDED)
+   =============================== */
+
+.range-row{
+  margin-bottom:12px;
+}
+
+.range-title{
+  font-size:11px;
+  font-weight:800;
+  letter-spacing:.12em;
+  opacity:.7;
+  margin-bottom:6px;
+  text-align:center;
+}
+
+.range-grid{
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:6px;
+}
+
+.range-btn{
+  border:none;
+  border-radius:999px;
+  padding:6px 0;
+  background:rgba(255,255,255,.12);
+  color:#fff;
+  font-weight:800;
+  font-size:11px;
+  cursor:pointer;
+}
+
+.range-btn.active{
+  background:#1fbad6;
+  color:#00333a;
+}
+
+/* ===============================
+   DROPDOWN CENTER FIX (ADD ONLY)
+   =============================== */
+
+.select-row{
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  gap:12px;
+  margin-bottom:14px;
+}
+
+.select-row select{
+  text-align:center;
+  text-align-last:center;
+  padding-left:0;
+  padding-right:0;
+}
+
+/* Optional: better vertical alignment */
+.select-row select option{
+  text-align:center;
+}
+
+
+
+/* ===============================
+   CLUE SYSTEM
+   =============================== */
+
+.plane-head-row{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  margin-bottom:6px;
+}
+
+.clue-btn{
+  font-size:12px;
+  font-weight:800;
+  opacity:.7;
+  cursor:pointer;
+  transition:.2s;
+}
+
+.clue-btn:hover{
+  opacity:1;
+  color:#4dffb2;
+}
+
+/* ===============================
+   CLUE UI STYLE FIX
+   =============================== */
+
+.clue-box{
+  margin-left: 12px;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+
+  color: #8fe9ff; /* same neon family */
+  opacity: 0.9;
+
+  max-width: 260px;
+  line-height: 1.4;
+
+  transition: opacity 0.2s ease;
+}
+
+/* Make it align with "Click the correct location" */
+.plane-head-row{
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+/* Hover polish (optional but nice) */
+.clue-btn:hover + .clue-box{
+  opacity: 1;
+}
+
+/* ===============================
+   TOUCH GLOW EFFECT
+   =============================== */
+
+.touch-glow{
+  position:absolute;
+  width:90px;
+  height:90px;
+  border-radius:50%;
+  pointer-events:none;
+  background:radial-gradient(circle,
+    rgba(0,198,255,0.6) 0%,
+    rgba(0,198,255,0.35) 40%,
+    rgba(0,198,255,0.15) 60%,
+    transparent 75%);
+  transform:translate(-50%,-50%);
+  opacity:0;
+  transition:opacity .25s ease;
+  z-index:5;
+}
+
+.touch-glow.active{
+  opacity:1;
+}
+
+.clue-title{
+  font-size:12px;
+  font-weight:600;
+  opacity:.8;
+  margin-bottom:4px;
+}
+
+.clue-formula{
+  font-size:14px;
+  font-weight:700;
+  color:#8fe9ff;
+  letter-spacing:.05em;
+}
+
+.sign-btn{
+  border:none;
+  padding:4px 10px;
+  margin:0 4px;
+  font-weight:900;
+  border-radius:6px;
+  cursor:pointer;
+  background:#1fbad6;
+  color:#00333a;
+}
+
+
+.cast-label{
+  position:absolute;
+  font-weight:900;
+  font-size:16px;
+  color:#ffffff;
+  text-shadow:0 0 8px rgba(255,255,255,.6);
+  pointer-events:none;
+  z-index:70;
+}
+
+
+.cast-big{
+  font-size:32px;
+  font-weight:900;
+  color:#ff3b3b;
+  text-shadow:0 0 12px rgba(255,59,59,.8);
+}
+
+
+/* Quadrant placement */
+.cast-label.q1{
+  top:20%;
+  right:18%;
+}
+
+.cast-label.q2{
+  top:20%;
+  left:18%;
+}
+
+.cast-label.q3{
+  bottom:20%;
+  left:18%;
+}
+
+.cast-label.q4{
+  bottom:20%;
+  right:18%;
+}
+
+#castOverlay{
+  pointer-events:none;
+}
+
+/* ===============================
+   FOOTER
+   =============================== */
+.footer {
+  margin-top: 18px;          /* slightly increased from 10px so it breathes under your buttons */
+  padding-bottom: 4px;
+  text-align: center;
+  font-size: 10px;
+  opacity: 0.45;
+  letter-spacing: 1.5px;
+  color: #ffffff;            /* ensures it matches your current theme */
+  text-transform: uppercase; /* looks great with your neon title aesthetic */
+}z
+    
+  </style>
+</head>
+
+<body>
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Unit Circle Trainer</title>
+<link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+<div class="app">
+
+  <!-- TITLE -->
+  <div class="title">
+    UNIT CIRCLE ANGLE SOLVINGS
+    <div class="subtitle">Step 1: LOCATE / PLOT</div>
+  </div>
+
+
+  <!-- CONTROLS ROW -->
+<div class="select-row">
+
+  <select id="trigSelect">
+    <option value="sin">sin</option>
+    <option value="cos">cos</option>
+    <option value="tan">tan</option>
+    <option value="mixed">mixed</option>
+  </select>
+
+  <select id="modeSelect">
+    <option value="deg">Degrees</option>
+    <option value="rad">Radians</option>
+    <option value="mixed">Mixed</option>
+  </select>
+
+  <select id="rangeSelect">
+    <option value="standard">0–360</option>
+    <option value="negative">Negative</option>
+    <option value="multi">±3 Turns</option>
+    <option value="infinite">Infinite</option>
+  </select>
+
+</div>
+
+  <!-- PROBLEM -->
+  <div class="problem" id="expr">210°</div>
+
+
+  <!-- CONVERT -->
+  <div class="step" id="convertStep" style="display:none;">
+
+    <div class="step-title">Optional: Convert to Degrees</div>
+
+    <button id="convertBtn" class="ghost">
+      Convert to Degrees First
+    </button>
+
+    <div id="convertBox" class="convert-box" style="display:none;">
+
+      <div id="convertFormula" class="frac-formula"></div>
+
+      <div class="convert-row">
+        <input id="degInput" type="number" placeholder="Degrees">
+        <span>°</span>
+        <button id="checkDegBtn">Check</button>
+      </div>
+
+    </div>
+
+  </div>
+
+
+  <!-- PLANE -->
+  <div class="plane-wrap">
+
+    <div class="plane-head-row">
+
+      <!-- CLUE -->
+      <div class="clue-btn" id="clueBtn">
+        Clue
+      </div>
+
+      <!-- CLUE TEXT -->
+      <div id="clueBox" class="clue-box"></div>
+
+      <div class="plane-head">
+        Click the correct location
+      </div>
+
+    </div>
+
+
+    <!-- PRINCIPAL ANGLE BOX (NEW) -->
+    <div class="step" id="principalBox" style="display:none;">
+      
+      <!-- STAGE 4 — CAST SIGN -->
+<div class="step" id="castBox" style="display:none;">
+
+  <div class="step-title">
+    Determine the Sign (CAST)
+  </div>
+
+  <div class="convert-row">
+
+    <select id="signSelect">
+      <option value="+">+</option>
+      <option value="-">-</option>
+    </select>
+
+    <button id="checkCastBtn">
+      Check
+    </button>
+
+  </div>
+
+</div>
+
+
+      <div class="step-title">
+        Estimate the Principal Angle (0°–360°)
+      </div>
+
+      <div class="convert-row">
+
+        <input
+          id="principalInput"
+          type="number"
+          placeholder="Enter angle"
+        >
+
+        <span>°</span>
+
+        <button id="checkPrincipalBtn">
+          Check
+        </button>
+
+      </div>
+
+    </div>
+
+
+    <div class="plane">
+
+      <!-- AXES -->
+      <div class="axis x left-half"></div>
+      <div class="axis x right-half"></div>
+      <div class="axis y top-half"></div>
+      <div class="axis y bottom-half"></div>
+
+
+      <!-- LABELS -->
+      <div class="axis-label top" id="labelTop">
+        90° (π/2)
+      </div>
+
+      <div class="axis-label right" id="labelRight">
+        0° (0)
+      </div>
+
+      <div class="axis-label left" id="labelLeft">
+        180° (π)
+      </div>
+
+      <div class="axis-label bottom" id="labelBottom">
+        270° (3π/2)
+      </div>
+
+
+      <!-- QUADRANTS -->
+      <div class="q-label q1">QI</div>
+      <div class="q-label q2">QII</div>
+      <div class="q-label q3">QIII</div>
+      <div class="q-label q4">QIV</div>
+
+
+      <!-- HITBOXES -->
+      <button class="hitbox q1" data-pos="Q1"></button>
+      <button class="hitbox q2" data-pos="Q2"></button>
+      <button class="hitbox q3" data-pos="Q3"></button>
+      <button class="hitbox q4" data-pos="Q4"></button>
+
+    </div>
+
+  </div>
+
+
+  <!-- FEEDBACK -->
+  <div class="feedback" id="feedback"></div>
+
+
+  <!-- CONTROLS -->
+  <div class="controls">
+    <button id="newBtn">New</button>
+    <button id="resetBtn">Reset</button>
+  </div>
+
+  <div class="footer">© Hulagpos DOST Review 2026</div>
+
+</div> <script src="script.js"></script>
+
+</body>
+</html>
+
+  <script>
+  /* UNIT CIRCLE TRAINER — FULL FIXED VERSION */
+
+let practiceMode = "deg"; // deg | rad | mixed
+let rangeMode = "standard"; // standard | multi | infinite
+let negativeOn = false;
+let prob = null;
+let trigMode = "sin"; // sin | cos | tan | csc | sec | cot | mixed
+
+let stage = 1; // 1 = Locate | 2 = Reference Angle
+
+/* ===============================
+   STAGE 3 — FINGER MAGIC MAPS (ADDED)
+=============================== */
+
+const sinMap = {
+  0:{num:0,den:1},
+  30:{num:1,den:2},
+  45:{num:2,den:2},
+  60:{num:3,den:2},
+  90:{num:4,den:2}
+};
+
+const cosMap = {
+  0:{num:4,den:2},
+  30:{num:3,den:2},
+  45:{num:2,den:2},
+  60:{num:1,den:2},
+  90:{num:0,den:2}
+};
+
+const tanMap = {
+  0:{num:0,den:1},
+  30:{num:1,den:3},
+  45:{num:1,den:1},
+  60:{num:3,den:1},
+  90:{num:4,den:0}
+};
+
+
+
+/* ===============================
+   DOM
+=============================== */
+
+const $ = s => document.querySelector(s);
+const $$ = s => Array.from(document.querySelectorAll(s));
+
+const exprEl = $("#expr");
+const feedbackEl = $("#feedback");
+const clueBtn = $("#clueBtn");
+const clueBox = $("#clueBox");
+
+const modeBtns = $$(".mode-btn");
+const rangeBtns = $$(".range-btn");
+
+const convertStep = $("#convertStep");
+const convertBtn = $("#convertBtn");
+const convertBox = $("#convertBox");
+const convertFormula = $("#convertFormula");
+const degInput = $("#degInput");
+const checkDegBtn = $("#checkDegBtn");
+
+const hitboxes = $$(".hitbox");
+
+const axisXLeft  = $(".axis.x.left-half");
+const axisXRight = $(".axis.x.right-half");
+const axisYTop   = $(".axis.y.top-half");
+const axisYBot   = $(".axis.y.bottom-half");
+
+const labelTop    = $("#labelTop");
+const labelRight  = $("#labelRight");
+const labelLeft   = $("#labelLeft");
+const labelBottom = $("#labelBottom");
+
+const newBtn = $("#newBtn");
+const resetBtn = $("#resetBtn");
+
+const principalBox = $("#principalBox");
+const principalInput = $("#principalInput");
+const checkPrincipalBtn = $("#checkPrincipalBtn");
+
+const castBox = $("#castBox");
+const signSelect = $("#signSelect");
+const checkCastBtn = $("#checkCastBtn");
+
+
+const funcBtns = $$(".func-btn");
+
+/* ===============================
+   NEW DROPDOWNS (ADDED, DOES NOT REMOVE OLD)
+=============================== */
+
+const trigSelect  = $("#trigSelect");   // <select id="trigSelect">
+const modeSelect  = $("#modeSelect");   // <select id="modeSelect">
+const rangeSelect = $("#rangeSelect");  // <select id="rangeSelect">
+
+
+/* ===============================
+   DATA
+=============================== */
+
+const DEG_BANK = [
+  0,30,45,60,90,
+  120,135,150,180,
+  210,225,240,270,
+  300,315,330
+];
+
+const RAD_BANK = [
+  "0","π/6","π/4","π/3","π/2",
+  "2π/3","3π/4","5π/6","π",
+  "7π/6","5π/4","4π/3","3π/2",
+  "5π/3","7π/4","11π/6"
+];
+
+
+/* ===============================
+   UTIL
+=============================== */
+
+function rand(a){
+  return a[Math.floor(Math.random()*a.length)];
+}
+
+function randInt(a,b){
+  return Math.floor(Math.random()*(b-a+1))+a;
+}
+
+function setFeedback(t,k=""){
+  feedbackEl.textContent = t;
+  feedbackEl.className = "feedback" + (k?` ${k}`:"");
+}
+
+
+/* ===============================
+   MATH HELPERS
+=============================== */
+
+function gcd(a,b){
+  a=Math.abs(a); b=Math.abs(b);
+  while(b){ [a,b]=[b,a%b]; }
+  return a||1;
+}
+
+function parseRad(r){
+
+  if(r==="0") return 0;
+
+  const p = r.split("π");
+  const n = p[0]===""?1:Number(p[0]);
+  const d = p[1]?Number(p[1].replace("/","")):1;
+
+  return Math.round(n*180/d);
+}
+
+
+// Degree → Simplified Rad
+function degToRad(deg){
+
+  if(deg===0) return "0";
+
+  let n = deg;
+  let d = 180;
+
+  const g = gcd(n,d);
+  n/=g; d/=g;
+
+  const sign = n<0?"-":"";
+  n = Math.abs(n);
+
+  if(d===1){
+    if(n===1) return sign+"π";
+    return sign+n+"π";
+  }
+
+  if(n===1){
+    return sign+`π/${d}`;
+  }
+
+  return sign+`${n}π/${d}`;
+}
+
+
+/* ===============================
+   RANGE SYSTEM
+=============================== */
+
+function applyRange(base){
+
+  let val = base;
+  let k = 0;
+
+  if(rangeMode==="standard"){
+    val = base;
+  }
+
+  if(rangeMode==="multi"){
+    k = randInt(1,3);
+    val = base + k*360;
+  }
+
+  if(rangeMode==="infinite"){
+    k = randInt(4,8);
+    val = base + k*360;
+  }
+
+  if(negativeOn){
+    val = -val;
+  }
+
+  return val;
+}
+
+
+/* ===============================
+   AXIS LABELS
+=============================== */
+
+function updateAxisLabels(){
+
+  labelRight.textContent  = "0° (0)";
+  labelTop.textContent    = "90° (π/2)";
+  labelLeft.textContent   = "180° (π)";
+  labelBottom.textContent = "270° (3π/2)";
+}
+
+
+/* ===============================
+   LOCATION LOGIC
+=============================== */
+
+function locationFromDegree(deg){
+
+  deg%=360;
+  if(deg<0)deg+=360;
+
+  if(deg===0)   return "AXIS+X";
+  if(deg===90)  return "AXIS+Y";
+  if(deg===180) return "AXIS-X";
+  if(deg===270) return "AXIS-Y";
+
+  if(deg>0&&deg<90)   return "Q1";
+  if(deg>90&&deg<180) return "Q2";
+  if(deg>180&&deg<270)return "Q3";
+
+  return "Q4";
+}
+
+
+function clearHits(){
+
+  hitboxes.forEach(h=>{
+    h.classList.remove("correct","wrong");
+  });
+
+  [axisXLeft,axisXRight,axisYTop,axisYBot].forEach(a=>{
+    a.classList.remove("correct","wrong");
+  });
+}
+
+
+
+
+/* ===============================
+   GENERATE
+=============================== */
+
+function generate(){
+
+  /* ===============================
+     FORCE BACK TO STAGE 1 UI
+  =============================== */
+
+  stage = 1;
+
+  // Restore subtitle
+  const subtitle = document.querySelector(".subtitle");
+  if(subtitle) subtitle.textContent = "Step 1: LOCATE / PLOT";
+
+  // Restore plane instruction
+  const planeHead = document.querySelector(".plane-head");
+  if(planeHead) planeHead.textContent = "Click the correct location";
+
+  // Show dropdown row again
+  const selectRow = document.querySelector(".select-row");
+  if(selectRow) selectRow.style.display = "flex";
+
+  // Remove ALL stage elements
+  document.getElementById("principalDisplay")?.remove();
+  document.getElementById("refPrompt")?.remove();
+  document.getElementById("refInputWrap")?.remove();
+  document.getElementById("refSVG")?.remove();
+  document.getElementById("eqLine")?.remove();
+  document.getElementById("fingerBox")?.remove();
+  document.getElementById("castStack")?.remove();
+  document.getElementById("castOverlay")?.remove();
+
+  /* ===============================
+     NOW CONTINUE NORMAL GENERATION
+  =============================== */
+
+
+
+  let form = practiceMode==="mixed"
+    ? rand(["deg","rad"])
+    : practiceMode;
+
+  if(form==="deg"){
+
+    const base = rand(DEG_BANK);
+    const d = applyRange(base);
+
+    prob = {
+      form:"deg",
+      degree:d,
+      display:`${d}°`,
+      loc:locationFromDegree(d)
+    };
+
+  }else{
+
+    const r = rand(RAD_BANK);
+    const base = parseRad(r);
+    const d = applyRange(base);
+
+    const disp = degToRad(d);
+
+    prob = {
+      form:"rad",
+      degree:d,
+      display:disp,
+      loc:locationFromDegree(d)
+    };
+  }
+
+  let trig = trigMode === "mixed"
+    ? rand(["sin","cos","tan","csc","sec","cot"])
+    : trigMode;
+
+  prob.trig = trig;
+
+  exprEl.textContent = `${trig}(${prob.display})`;
+
+  updateAxisLabels();
+  resetInputs();
+  toggleConvert();
+
+  if(clueBox){
+    clueBox.textContent = "";
+  }
+}
+
+
+/* ===============================
+   RESET
+=============================== */
+
+function resetInputs(){
+
+  degInput.value="";
+  clearHits();
+  convertBox.style.display="none";
+  setFeedback("");
+
+  if(principalBox){
+    principalBox.style.display="none";
+  }
+
+  if(principalInput){
+    principalInput.value="";
+  }
+}
+
+
+/* ===============================
+   CONVERT UI
+=============================== */
+
+function toggleConvert(){
+
+  if(prob.form!=="rad"){
+    convertStep.style.display="none";
+    return;
+  }
+
+  convertStep.style.display="block";
+
+  let raw = prob.display;
+  let sign="";
+
+  if(raw.startsWith("-")){
+    sign="-";
+    raw=raw.slice(1);
+  }
+
+  let num="",den="1";
+
+  if(raw==="0"){
+    num="0";
+  }
+  else if(raw==="π"){
+    num="π";
+  }
+  else if(raw.startsWith("π/")){
+    num="π";
+    den=raw.split("/")[1];
+  }
+  else if(raw.includes("π/")){
+    const p=raw.split("π/");
+    num=p[0]+"π";
+    den=p[1];
+  }
+  else if(raw.endsWith("π")){
+    num=raw;
+  }
+
+  if(sign && num!=="0") num="-"+num;
+
+  convertFormula.innerHTML=`
+    (
+      ${renderFraction(num,den)}
+      ×
+      ${renderFraction("180","π")}
+    )
+    =
+  `;
+}
+
+
+/* ===============================
+   FRACTION RENDER
+=============================== */
+
+function renderFraction(num,den){
+
+  return `
+  <span class="frac">
+    <span class="top">${num}</span>
+    <span class="bar"></span>
+    <span class="bottom">${den}</span>
+  </span>`;
+}
+
+
+/* ===============================
+   CLICK HANDLERS
+=============================== */
+
+hitboxes.forEach(h=>{
+
+  h.onclick=()=>{
+
+    clearHits();
+
+    if(h.dataset.pos===prob.loc){
+  h.classList.add("correct");
+  setFeedback("✅ Correct","good");
+
+  // Move to Stage 2
+  setTimeout(() => {
+    enterReferenceStage();
+  }, 600);
+}
+else{
+      h.classList.add("wrong");
+      setFeedback("❌ Wrong","bad");
+    }
+  };
+});
+
+
+function bindAxis(axis,key){
+
+  axis.onclick=()=>{
+
+    clearHits();
+
+    if(prob.loc===key){
+  axis.classList.add("correct");
+  setFeedback("✅ Correct","good");
+
+  // Move to Stage 2
+  setTimeout(() => {
+    enterReferenceStage();
+  }, 600);
+
+}else{
+  axis.classList.add("wrong");
+  setFeedback("❌ Wrong","bad");
+}
+
+  };
+}
+
+bindAxis(axisXLeft,"AXIS-X");
+bindAxis(axisXRight,"AXIS+X");
+bindAxis(axisYTop,"AXIS+Y");
+bindAxis(axisYBot,"AXIS-Y");
+
+
+/* ===============================
+   MODE BIND (OLD BUTTONS — KEPT)
+=============================== */
+
+modeBtns.forEach(btn=>{
+
+  btn.onclick=()=>{
+
+    modeBtns.forEach(b=>b.classList.remove("active"));
+    btn.classList.add("active");
+
+    practiceMode = btn.dataset.form;
+    generate();
+  };
+});
+
+/* ===============================
+   TRIG MODE BIND (OLD BUTTONS — KEPT)
+=============================== */
+
+funcBtns.forEach(btn=>{
+
+  btn.onclick=()=>{
+
+    funcBtns.forEach(b=>b.classList.remove("active"));
+    btn.classList.add("active");
+
+    trigMode = btn.dataset.func;
+
+    generate();
+  };
+});
+
+
+/* ===============================
+   RANGE + NEGATIVE (OLD BUTTONS — KEPT)
+=============================== */
+
+rangeBtns.forEach(btn=>{
+
+  btn.onclick=()=>{
+
+    if(btn.dataset.range==="negative"){
+
+      negativeOn = !negativeOn;
+      btn.classList.toggle("active",negativeOn);
+
+      generate();
+      return;
+    }
+
+    rangeBtns.forEach(b=>{
+      if(b.dataset.range!=="negative"){
+        b.classList.remove("active");
+      }
+    });
+
+    btn.classList.add("active");
+    rangeMode = btn.dataset.range;
+
+    generate();
+  };
+});
+
+
+/* ===============================
+   NEW DROPDOWN BINDINGS (ADDED)
+   - DOES NOT BREAK OLD BUTTONS
+=============================== */
+
+if(trigSelect){
+  trigSelect.onchange = () => {
+    trigMode = trigSelect.value;
+    generate();
+  };
+}
+
+if(modeSelect){
+  modeSelect.onchange = () => {
+    practiceMode = modeSelect.value;
+    generate();
+  };
+}
+
+if(rangeSelect){
+  rangeSelect.onchange = () => {
+
+    // Keep your original "negativeOn" behavior
+    if(rangeSelect.value === "negative"){
+      negativeOn = true;
+      rangeMode = "standard";
+    }else{
+      negativeOn = false;
+      rangeMode = rangeSelect.value;
+    }
+
+    generate();
+  };
+}
+
+
+/* ===============================
+   CONVERT CHECK
+=============================== */
+
+convertBtn.onclick=()=>{
+
+  convertBox.style.display =
+    convertBox.style.display==="none"
+    ? "block":"none";
+
+  degInput.value="";
+  setFeedback("");
+};
+
+
+checkDegBtn.onclick=()=>{
+
+  if(!prob||prob.form!=="rad") return;
+
+  const v = parseInt(degInput.value,10);
+
+  const raw = prob.degree;
+  const reduced = ((raw%360)+360)%360;
+
+  if(
+    v===raw ||
+    v===reduced ||
+    v===reduced-360
+  ){
+    setFeedback("✅ Correct conversion","good");
+  }else{
+    setFeedback("❌ Wrong conversion","bad");
+  }
+};
+
+
+/* ===============================
+   CLUE SYSTEM
+=============================== */
+
+/* ===============================
+   CLUE SYSTEM
+=============================== */
+
+function getClue() {
+  if (!prob) return "";
+
+  // STAGE 1 CLUE
+  if (stage === 1) {
+    if (Math.abs(prob.degree) < 360) return "Already within one full turn.";
+    if (prob.form === "deg") return "How many full 360° revolutions fit here?";
+    return "Subtract full 2π or 360° rotations.";
+  }
+
+  // STAGE 2 CLUE
+  if (stage === 2) {
+    const raw = prob.degree;
+    const theta = ((raw % 360) + 360) % 360;
+    let formula = "";
+
+    if (theta > 0 && theta < 90) formula = "angle − 0";
+    else if (theta > 90 && theta < 180) formula = "180 − angle";
+    else if (theta > 180 && theta < 270) formula = "angle − 180";
+    else if (theta > 270 && theta < 360) formula = "360 − angle";
+    else formula = "Angle lies on axis";
+
+    return `
+      <div class="clue-title">With respect to the x-axis</div>
+      <div class="clue-formula">${formula}</div>
+    `;
+  }
+
+  // STAGE 3 CLUE
+  if (stage === 3) {
+    return `
+      <div style="line-height:1.6;">
+        <div style="font-weight:700;">Use Finger Magic</div>
+        <div>90 - 60 - 45 - 30 - 0</div>
+        <br>
+        <div>Cos = √(Left) ; √(Right) = Sin</div>
+        <div>Tan = Sin/Cos ; √(Right)/√(Left)</div>
+      </div>
+    `;
+  }
+
+  return "";
+}
+
+if (clueBtn && clueBox) {
+  clueBtn.onclick = () => {
+    const clueContent = getClue();
+
+    if (clueContent) {
+      clueBox.innerHTML = clueContent;
+      clueBox.style.opacity = "1";
+
+      // Only show principal input box if we are in Stage 1
+      if (stage === 1 && principalBox && principalInput) {
+        principalBox.style.display = "block";
+        principalInput.value = "";
+      }
+    } else {
+      clueBox.innerHTML = "";
+      if (stage === 1 && principalBox) {
+        principalBox.style.display = "none";
+      }
+    }
+  };
+}
+
+/*
+=====================
+enter reference angle stage2
+==========================
+*/
+
+
+function enterReferenceStage(){
+
+  if(stage === 2) return;
+  stage = 2;
+
+  setFeedback("");
+
+  // 🔥 Hide Stage 1 Convert UI
+  if(convertStep) convertStep.style.display = "none";
+  if(convertBox) convertBox.style.display = "none";
+
+  /* ===============================
+     CLEAN STAGE 3 IF COMING BACK
+  =============================== */
+  document.getElementById("eqLine")?.remove();
+  document.getElementById("fingerBox")?.remove();
+
+  /* ===============================
+     HIDE DROPDOWNS
+  =============================== */
+  const selectRow = document.querySelector(".select-row");
+  if(selectRow) selectRow.style.display = "none";
+
+  /* ===============================
+     CHANGE SUBTITLE
+  =============================== */
+  const subtitle = document.querySelector(".subtitle");
+  if(subtitle) subtitle.textContent = "Reference Angle";
+
+  const planeHead = document.querySelector(".plane-head");
+  if(planeHead) planeHead.textContent = "What's the Reference Angle?";
+
+  /* ===============================
+     CLEAR STAGE 1 UI
+  =============================== */
+  if(principalBox) principalBox.style.display = "none";
+  if(principalInput) principalInput.value = "";
+  if(clueBox){
+    clueBox.innerHTML = "";
+    clueBox.style.opacity = "0";
+  }
+
+  /* ===============================
+     REMOVE OLD STAGE 2 ELEMENTS
+  =============================== */
+  document.getElementById("refPrompt")?.remove();
+  document.getElementById("refInputWrap")?.remove();
+  document.getElementById("principalDisplay")?.remove();
+  document.getElementById("refSVG")?.remove(); // important for redraw
+
+  /* ===============================
+     COMPUTE PRINCIPAL ANGLE
+  =============================== */
+  const raw = prob.degree;
+  const theta = ((raw % 360) + 360) % 360;
+
+  /* ===============================
+     ADD SUBTLE PRINCIPAL DISPLAY
+  =============================== */
+  const principalLine = document.createElement("div");
+  principalLine.id = "principalDisplay";
+  principalLine.style.marginTop = "6px";
+  principalLine.style.fontSize = "12px";
+  principalLine.style.opacity = ".55";
+  principalLine.style.letterSpacing = ".06em";
+  principalLine.textContent = `Principal Angle: ${theta}°`;
+
+  exprEl.insertAdjacentElement("afterend", principalLine);
+
+  /* ===============================
+     ADD REFERENCE PROMPT
+  =============================== */
+  const prompt = document.createElement("div");
+  prompt.id = "refPrompt";
+  prompt.style.marginTop = "6px";
+  prompt.style.fontWeight = "700";
+  prompt.style.fontSize = "13px";
+  prompt.style.opacity = ".85";
+  prompt.textContent = "What’s the Reference Angle?";
+
+  principalLine.insertAdjacentElement("afterend", prompt);
+
+  /* ===============================
+     ADD INPUT
+  =============================== */
+  const inputWrap = document.createElement("div");
+  inputWrap.id = "refInputWrap";
+  inputWrap.style.marginTop = "8px";
+  inputWrap.style.display = "flex";
+  inputWrap.style.gap = "6px";
+  inputWrap.style.alignItems = "center";
+
+  inputWrap.innerHTML = `
+    <input id="refInput" type="number" placeholder="Angle">
+    <span>°</span>
+    <button id="checkRefBtn">Check</button>
+  `;
+
+  prompt.insertAdjacentElement("afterend", inputWrap);
+
+  const checkBtn = document.getElementById("checkRefBtn");
+  if(checkBtn) checkBtn.onclick = checkReferenceAngle;
+
+  /* ===============================
+     REDRAW ARC
+  =============================== */
+  drawReferenceVisual();
+}
+
+/*
+
+================
+DRAW REFERENCE ANGLE
+=================
+
+*/
+
+function drawReferenceVisual(){
+
+  const plane = document.querySelector(".plane");
+  if(!plane || !prob) return;
+
+  // Remove old SVG
+  document.getElementById("refSVG")?.remove();
+
+  const raw = prob.degree;
+  const theta = ((raw % 360) + 360) % 360;
+
+  // Don't draw if angle is on axis
+  if(theta === 0 || theta === 90 || theta === 180 || theta === 270){
+    return;
+  }
+
+  const size = plane.clientWidth;
+  const center = size / 2;
+  const terminalRadius = size * 0.38;
+
+  const rad = theta * Math.PI / 180;
+
+  const x = center + terminalRadius * Math.cos(rad);
+  const y = center - terminalRadius * Math.sin(rad);
+
+  const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+  svg.setAttribute("id", "refSVG");
+  svg.setAttribute("width", size);
+  svg.setAttribute("height", size);
+  svg.style.position = "absolute";
+  svg.style.top = "0";
+  svg.style.left = "0";
+  svg.style.pointerEvents = "none";
+  svg.style.zIndex = "40";
+
+  // Terminal side
+  const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+  line.setAttribute("x1", center);
+  line.setAttribute("y1", center);
+  line.setAttribute("x2", x);
+  line.setAttribute("y2", y);
+  line.setAttribute("stroke", "red");
+  line.setAttribute("stroke-width", "2.5");
+  line.setAttribute("stroke-linecap", "round");
+
+  svg.appendChild(line);
+
+  // Reference angle size
+  let refAngle;
+  if(theta < 90) refAngle = theta;
+  else if(theta < 180) refAngle = 180 - theta;
+  else if(theta < 270) refAngle = theta - 180;
+  else refAngle = 360 - theta;
+
+  const arcRad = refAngle * Math.PI / 180;
+  const arcRadius = size * 0.18;
+
+  let startAngle, endAngle;
+
+  if(theta < 90){
+    startAngle = 0;
+    endAngle = arcRad;
+  }
+  else if(theta < 180){
+    startAngle = Math.PI;
+    endAngle = Math.PI - arcRad;
+  }
+  else if(theta < 270){
+    startAngle = Math.PI;
+    endAngle = Math.PI + arcRad;
+  }
+  else{
+    startAngle = 0;
+    endAngle = -arcRad;
+  }
+
+  const arcPath = describeArc(center, center, arcRadius, startAngle, endAngle);
+
+  const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+  path.setAttribute("d", arcPath);
+  path.setAttribute("stroke", "red");
+  path.setAttribute("stroke-width", "3");
+  path.setAttribute("fill", "none");
+  path.setAttribute("stroke-linecap", "round");
+
+  svg.appendChild(path);
+
+  plane.appendChild(svg);
+}
+
+
+function describeArc(cx, cy, r, startAngle, endAngle){
+
+  const start = {
+    x: cx + r * Math.cos(startAngle),
+    y: cy - r * Math.sin(startAngle)
+  };
+
+  const end = {
+    x: cx + r * Math.cos(endAngle),
+    y: cy - r * Math.sin(endAngle)
+  };
+
+  const angleDiff = endAngle - startAngle;
+
+  const largeArc = Math.abs(angleDiff) > Math.PI ? 1 : 0;
+  const sweep = angleDiff >= 0 ? 0 : 1;
+
+  return `M ${start.x} ${start.y}
+          A ${r} ${r} 0 ${largeArc} ${sweep} ${end.x} ${end.y}`;
+}
+
+
+/*
+
+===========================
+CHECK REFERENCE ANGLE
+===========================
+
+*/
+
+function checkReferenceAngle(){
+
+  const input = document.getElementById("refInput");
+  if(!input || !prob) return;
+
+  const value = parseInt(input.value, 10);
+
+  if(isNaN(value)){
+    setFeedback("⚠️ Enter a number","bad");
+    return;
+  }
+
+  const raw = prob.degree;
+  const theta = ((raw % 360) + 360) % 360;
+
+  let correct;
+
+  if(theta < 90) correct = theta;
+  else if(theta < 180) correct = 180 - theta;
+  else if(theta < 270) correct = theta - 180;
+  else correct = 360 - theta;
+
+  if(value === correct){
+
+    setFeedback("✅ Correct","good");
+
+    input.disabled = true;
+
+    setTimeout(()=>{
+      enterFingerStage(correct);
+    },700);
+
+  }else{
+
+    setFeedback("❌ Incorrect","bad");
+
+    input.value = "";
+    input.focus();
+  }
+}
+
+
+
+/* ===============================
+   PRINCIPAL ANGLE CHECK TITE
+=============================== */
+
+if(checkPrincipalBtn){
+
+  checkPrincipalBtn.onclick = ()=>{
+
+    if(!prob) return;
+
+    const v = parseInt(principalInput.value,10);
+
+    if(isNaN(v)){
+      setFeedback("⚠️ Enter a number","bad");
+      return;
+    }
+
+    const raw = prob.degree;
+    const principal = ((raw % 360) + 360) % 360;
+
+    if(v === principal){
+      setFeedback("✅ Correct principal angle","good");
+    }else{
+      setFeedback(`❌ Correct: ${principal}°`,"bad");
+    }
+  };
+}
+
+
+/* ===============================
+   CONTROLS
+=============================== */
+
+newBtn.onclick=generate;
+
+resetBtn.onclick = resetToStage1;
+
+
+/*
+
+======================
+RESET BUTTON FUNCTION
+==================
+
+*/
+
+function resetToStage1(){
+
+  if(!prob) return;
+
+  stage = 1;
+
+  /* ===============================
+     RESTORE STAGE 1 UI
+  =============================== */
+
+  const subtitle = document.querySelector(".subtitle");
+  if(subtitle) subtitle.textContent = "Step 1: LOCATE / PLOT";
+
+  const planeHead = document.querySelector(".plane-head");
+  if(planeHead) planeHead.textContent = "Click the correct location";
+
+  const selectRow = document.querySelector(".select-row");
+  if(selectRow) selectRow.style.display = "flex";
+
+  /* ===============================
+     REMOVE STAGE 2–4 ELEMENTS
+  =============================== */
+
+  document.getElementById("principalDisplay")?.remove();
+  document.getElementById("refPrompt")?.remove();
+  document.getElementById("refInputWrap")?.remove();
+  document.getElementById("refSVG")?.remove();
+  document.getElementById("eqLine")?.remove();
+  document.getElementById("fingerBox")?.remove();
+  document.getElementById("castStack")?.remove();
+  document.getElementById("castOverlay")?.remove();
+
+  /* ===============================
+     RESTORE ORIGINAL EXPRESSION
+  =============================== */
+
+  exprEl.textContent = `${prob.trig}(${prob.display})`;
+
+  clearHits();
+  setFeedback("");
+  toggleConvert();
+}
+
+
+/* ===============================
+   INIT (SYNC DROPDOWNS TO DEFAULTS)
+=============================== */
+
+if(trigSelect)  trigSelect.value  = trigMode;
+if(modeSelect)  modeSelect.value  = practiceMode;
+if(rangeSelect) rangeSelect.value = negativeOn ? "negative" : rangeMode;
+
+/* ===============================
+   MOBILE TOUCH GLOW SYSTEM
+   =============================== */
+
+const plane = document.querySelector(".plane");
+
+let glow = document.createElement("div");
+glow.className = "touch-glow";
+plane.appendChild(glow);
+
+function showGlow(x,y){
+  glow.style.left = x + "px";
+  glow.style.top  = y + "px";
+  glow.classList.add("active");
+}
+
+function hideGlow(){
+  glow.classList.remove("active");
+}
+
+/* Touch events */
+plane.addEventListener("touchstart", e=>{
+  const rect = plane.getBoundingClientRect();
+  const touch = e.touches[0];
+
+  const x = touch.clientX - rect.left;
+  const y = touch.clientY - rect.top;
+
+  showGlow(x,y);
+});
+
+plane.addEventListener("touchmove", e=>{
+  const rect = plane.getBoundingClientRect();
+  const touch = e.touches[0];
+
+  const x = touch.clientX - rect.left;
+  const y = touch.clientY - rect.top;
+
+  showGlow(x,y);
+});
+
+plane.addEventListener("touchend", ()=>{
+  hideGlow();
+});
+
+/* ===============================
+   STAGE 3 — FINGER MAGIC
+=============================== */
+
+function enterFingerStage(refAngle){
+
+  stage = 3;
+  setFeedback("");
+
+
+  // Clear old clue
+  if(clueBox){
+    clueBox.innerHTML = "";
+    clueBox.style.opacity = "0";
+  }
+
+  // Change subtitle
+  const subtitle = document.querySelector(".subtitle");
+  if(subtitle) subtitle.textContent = "Finger Magic";
+
+  const planeHead = document.querySelector(".plane-head");
+  if(planeHead) planeHead.textContent = "Compute the Value";
+
+  // Remove Stage 2 UI
+  document.getElementById("refPrompt")?.remove();
+  document.getElementById("refInputWrap")?.remove();
+  document.getElementById("eqLine")?.remove();
+  document.getElementById("fingerBox")?.remove();
+
+  // Show equality
+  const eqLine = document.createElement("div");
+  eqLine.id = "eqLine";
+  eqLine.style.marginTop = "8px";
+  eqLine.style.fontWeight = "800";
+  eqLine.style.fontSize = "14px";
+
+  eqLine.textContent =
+    `${prob.trig}(${prob.display}) = ${prob.trig}(${refAngle}°)`;
+
+  exprEl.insertAdjacentElement("afterend", eqLine);
+
+  createFingerMagicUI(refAngle);
+}
+
+
+
+function createFingerMagicUI(angle){
+
+  const wrap = document.createElement("div");
+  wrap.id = "fingerBox";
+  wrap.style.marginTop = "12px";
+  wrap.style.textAlign = "center";
+
+  let html = "";
+
+  // ===== TAN CASE =====
+  if(prob.trig === "tan"){
+
+    html = `
+      <div style="margin-bottom:8px;font-weight:700;">
+        √ <input id="fmTop" type="number" min="0" max="4" style="width:50px;">
+        /
+        √ <input id="fmBottom" type="number" min="0" max="4" style="width:50px;">
+      </div>
+      <button id="fmCheckBtn">Check</button>
+      <div id="fmResult" style="margin-top:10px;"></div>
+    `;
+
+  }else{
+
+    // ===== SIN / COS =====
+    html = `
+      <div style="margin-bottom:8px;font-weight:700;">
+        √ <input id="fmNum" type="number" min="0" max="4" style="width:60px;"> / 2
+      </div>
+      <button id="fmCheckBtn">Check</button>
+      <div id="fmResult" style="margin-top:10px;"></div>
+    `;
+  }
+
+  wrap.innerHTML = html;
+
+  document.getElementById("eqLine")
+    .insertAdjacentElement("afterend", wrap);
+
+  document.getElementById("fmCheckBtn")
+    .onclick = () => checkFingerMagic(angle);
+}
+
+/*
+===================
+RENDER TRIG VALUE
+========================
+*/
+
+function renderTrigValue(trig, angle){
+
+  let correct;
+
+  if(trig === "sin") correct = sinMap[angle];
+  if(trig === "cos") correct = cosMap[angle];
+  if(trig === "tan") correct = tanMap[angle];
+
+  if(!correct) return "Unsupported";
+
+  // TAN undefined
+  if(trig === "tan" && correct.den === 0){
+    return "Undefined";
+  }
+
+  let num = correct.num;
+  let den = correct.den;
+
+  // √num
+  let sqrtNum = Math.sqrt(num);
+
+  // √4 = 2, √0 = 0, √1 = 1
+  if(Number.isInteger(sqrtNum)){
+    num = sqrtNum;
+  }else{
+    num = `√${num}`;
+  }
+
+  // Denominator 1 case
+  if(den === 1){
+    return `${num}`;
+  }
+
+  // If numeric numerator now divisible by denominator
+  if(typeof num === "number" && num % den === 0){
+    return `${num/den}`;
+  }
+
+  // If numerator becomes 0
+  if(num === 0){
+    return "0";
+  }
+
+  // Normal fraction
+  return renderFraction(num, den);
+}
+
+
+
+/*
+=====================
+CHECK FINGER MAGICCCC
+====================
+*/
+
+
+
+function checkFingerMagic(angle){
+
+  const resultEl = document.getElementById("fmResult");
+
+  let correct;
+
+  if(prob.trig === "sin") correct = sinMap[angle];
+  if(prob.trig === "cos") correct = cosMap[angle];
+  if(prob.trig === "tan") correct = tanMap[angle];
+
+  if(!correct){
+    resultEl.innerHTML = "Unsupported function";
+    return;
+  }
+
+  /* ===============================
+     TAN CASE
+  =============================== */
+
+  if(prob.trig === "tan"){
+
+    const top = parseInt(document.getElementById("fmTop").value);
+    const bottom = parseInt(document.getElementById("fmBottom").value);
+
+    if(isNaN(top) || isNaN(bottom)){
+      resultEl.innerHTML = "⚠️ Enter both numbers";
+      return;
+    }
+
+    const fraction = renderTrigValue("tan", angle);
+
+    if(top === correct.num && bottom === correct.den){
+
+      resultEl.innerHTML =
+        `<span class="correct">✅ Correct</span><br>
+         tan ${angle}° = ${fraction}`;
+
+      // 🚀 MOVE TO STAGE 4
+      setTimeout(()=>{
+        enterCastStage(angle, fraction);
+      }, 2000);
+
+    }else{
+
+      resultEl.innerHTML =
+        `<span class="wrong">❌ Incorrect</span><br>
+         tan ${angle}° = ${fraction}`;
+    }
+
+    return;
+  }
+
+  /* ===============================
+     SIN / COS CASE
+  =============================== */
+
+  const user = parseInt(document.getElementById("fmNum").value);
+
+  if(isNaN(user)){
+    resultEl.innerHTML = "⚠️ Enter a number";
+    return;
+  }
+
+  const fraction = renderTrigValue(prob.trig, angle);
+
+  if(user === correct.num){
+
+    resultEl.innerHTML =
+      `<span class="correct">✅ Correct</span><br>
+       ${prob.trig} ${angle}° = ${fraction}`;
+
+    // 🚀 MOVE TO STAGE 4
+    setTimeout(()=>{
+      enterCastStage(angle, fraction);
+    }, 2000);
+
+  }else{
+
+    resultEl.innerHTML =
+      `<span class="wrong">❌ Incorrect</span><br>
+       ${prob.trig} ${angle}° = ${fraction}`;
+  }
+}
+
+/*
+
+CASTTTTTTTTTTTTTTTTTTTTTTTT
+
+*/
+
+/* ===============================
+   STAGE 4 — CAST SYSTEM
+=============================== */
+
+/* ===============================
+   STAGE 4 — CAST SYSTEM
+=============================== */
+
+function enterCastStage(refAngle, magnitude) {
+  stage = 4;
+  setFeedback("");
+
+  // Clean up previous elements
+  document.getElementById("fingerBox")?.remove();
+  document.getElementById("eqLine")?.remove();
+  document.getElementById("castStack")?.remove();
+
+  const subtitle = document.querySelector(".subtitle");
+  if (subtitle) subtitle.textContent = "CAST";
+
+  const planeHead = document.querySelector(".plane-head");
+  if (planeHead) planeHead.textContent = "Determine the Sign";
+
+  const stack = document.createElement("div");
+  stack.id = "castStack";
+  stack.style.marginTop = "18px";
+  stack.style.textAlign = "center";
+  stack.style.fontWeight = "900";
+
+  // Added a dedicated empty div for the result message at the bottom
+  stack.innerHTML = `
+    <div style="font-size:24px;margin-top:10px;">
+      = ${prob.trig}(${refAngle}°) + CAST
+    </div>
+
+    <div style="
+      margin-top:22px;
+      display:flex;
+      justify-content:center;
+      align-items:center;
+      gap:16px;
+      font-size:34px;
+    ">
+      =
+      <select id="signSelect" class="sign-select">
+        <option value="+">+</option>
+        <option value="-">−</option>
+      </select>
+
+      <span style="font-size:38px;">
+        ${magnitude}
+      </span>
+    </div>
+
+    <div style="margin-top: 18px;">
+      <button id="dynamicCheckCastBtn" style="padding: 8px 18px; border: none; border-radius: 8px; background: #1fbad6; color: #00333a; font-weight: 800; cursor: pointer;">
+        Check Sign
+      </button>
+    </div>
+    
+    <div id="castResultMsg" style="margin-top:12px; font-weight:900;"></div>
+  `;
+
+  exprEl.insertAdjacentElement("afterend", stack);
+
+  // Bind the Check button
+  const checkBtn = document.getElementById("dynamicCheckCastBtn");
+  if (checkBtn) {
+    checkBtn.onclick = () => {
+      const chosenSign = document.getElementById("signSelect").value;
+      checkSign(chosenSign, getCorrectSign());
+    };
+  }
+
+  addCastOverlay();
+}
+
+function getCorrectSign() {
+  const q = prob.loc;
+  const trig = prob.trig;
+
+  // Quadrants (CAST Rule)
+  if (q === "Q1") return "+";
+  if (q === "Q2") return (trig === "sin" || trig === "csc") ? "+" : "-";
+  if (q === "Q3") return (trig === "tan" || trig === "cot") ? "+" : "-";
+  if (q === "Q4") return (trig === "cos" || trig === "sec") ? "+" : "-";
+
+  // Axes Logic (Fixes the sin(270) = +1 bug)
+  if (q === "AXIS+X" || q === "AXIS+Y") return "+";
+  
+  if (q === "AXIS-X") {
+    // 180° / π
+    return (trig === "cos" || trig === "sec") ? "-" : "+";
+  }
+  
+  if (q === "AXIS-Y") {
+    // 270° / 3π/2
+    return (trig === "sin" || trig === "csc") ? "-" : "+";
+  }
+
+  return "+";
+}
+
+function checkSign(chosen, correct) {
+  const msgBox = document.getElementById("castResultMsg");
+  const signSelect = document.getElementById("signSelect");
+  const checkBtn = document.getElementById("dynamicCheckCastBtn");
+  
+  if (chosen === correct) {
+    setFeedback("✅ Correct Sign", "good");
+
+    msgBox.style.color = "#4dffb2";
+    msgBox.innerHTML = "✅ Final Answer is correct!";
+    
+    // Lock the button
+    checkBtn.disabled = true;
+
+    // Freeze the dropdown WITHOUT dimming it
+    signSelect.style.pointerEvents = "none"; 
+    
+    // Optional: Hide the dropdown arrow so it looks like a pure math equation
+    signSelect.style.appearance = "none";
+    signSelect.style.border = "1px solid #4dffb2"; // Give it a nice green glow
+
+  } else {
+    setFeedback("❌ Wrong Sign", "bad");
+    
+    msgBox.style.color = "#ff6b6b";
+    msgBox.innerHTML = "❌ Incorrect sign. Try again!";
+  }
+}
+
+function addCastOverlay() {
+  const plane = document.querySelector(".plane");
+  if (!plane) return;
+
+  document.getElementById("castOverlay")?.remove();
+
+  const overlay = document.createElement("div");
+  overlay.id = "castOverlay";
+  overlay.style.position = "absolute";
+  overlay.style.top = "0";
+  overlay.style.left = "0";
+  overlay.style.width = "100%";
+  overlay.style.height = "100%";
+  overlay.style.pointerEvents = "none";
+  overlay.style.zIndex = "100";
+
+  overlay.innerHTML = `
+    <div class="cast-label q1"><span class="cast-big">A</span>ll > 0</div>
+    <div class="cast-label q2"><span class="cast-big">S</span>in > 0</div>
+    <div class="cast-label q3"><span class="cast-big">T</span>an > 0</div>
+    <div class="cast-label q4"><span class="cast-big">C</span>os > 0</div>
+  `;
+
+  plane.appendChild(overlay);
+}
+
+// Kick off the app
+generate();
+
+
+
+
+    
+  </script>
+
+</body>
+</html>
